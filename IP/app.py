@@ -51,7 +51,7 @@ def analyze_ip(ip):
 @app.route('/')
 def index():
     raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    user_ip = raw_ip.split(',')[0].strip()
+    user_ip = raw_ip.split(',')[0].strip()  # ⬅️ أهم سطر
 
     # Analyze and prepare message
     msg = analyze_ip(user_ip)
